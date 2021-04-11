@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 
-import { createUser } from '../utils/API';
+import { useMutation } from '@apollo/react-hooks';
+import { ADD_USER } from '../utils/mutations';
+
 import Auth from '../utils/auth';
 
 const SignupForm = () => {
   // set initial form state
-  const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '' });
+  const [userFormData, setUserFormData] = useState({ uname: '', emailIn: '', pword: '' });
+  const [addUser] = useMutation(ADD_USER);
   // set state for form validation
   const [validated] = useState(false);
   // set state for alert
@@ -28,24 +31,21 @@ const SignupForm = () => {
     }
 
     try {
-      const response = await createUser(userFormData);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const { token, user } = await response.json();
-      console.log(user);
-      Auth.login(token);
+      // execute addUser mutation and pass in variable data from form
+      const { data } = await addUser({
+        variables: { ...userFormData }
+      });
+      
+      Auth.login(data.addUser.token);
     } catch (err) {
       console.error(err);
       setShowAlert(true);
     }
 
     setUserFormData({
-      username: '',
-      email: '',
-      password: '',
+      uname: '',
+      emailIn: '',
+      pword: '',
     });
   };
 
@@ -59,45 +59,45 @@ const SignupForm = () => {
         </Alert>
 
         <Form.Group>
-          <Form.Label htmlFor='username'>Username</Form.Label>
+          <Form.Label htmlFor='uname'>Username</Form.Label>
           <Form.Control
             type='text'
             placeholder='Your username'
-            name='username'
+            name='uname'
             onChange={handleInputChange}
-            value={userFormData.username}
+            value={userFormData.uname}
             required
           />
           <Form.Control.Feedback type='invalid'>Username is required!</Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group>
-          <Form.Label htmlFor='email'>Email</Form.Label>
+          <Form.Label htmlFor='emailIn'>Email</Form.Label>
           <Form.Control
             type='email'
             placeholder='Your email address'
-            name='email'
+            name='emailIn'
             onChange={handleInputChange}
-            value={userFormData.email}
+            value={userFormData.emailIn}
             required
           />
           <Form.Control.Feedback type='invalid'>Email is required!</Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group>
-          <Form.Label htmlFor='password'>Password</Form.Label>
+          <Form.Label htmlFor='pword'>Password</Form.Label>
           <Form.Control
             type='password'
             placeholder='Your password'
-            name='password'
+            name='pword'
             onChange={handleInputChange}
-            value={userFormData.password}
+            value={userFormData.pword}
             required
           />
           <Form.Control.Feedback type='invalid'>Password is required!</Form.Control.Feedback>
         </Form.Group>
         <Button
-          disabled={!(userFormData.username && userFormData.email && userFormData.password)}
+          disabled={!(userFormData.uname && userFormData.emailIn && userFormData.pword)}
           type='submit'
           variant='success'>
           Submit
